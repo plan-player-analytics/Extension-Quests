@@ -39,7 +39,9 @@ import org.bukkit.Bukkit;
 
 import java.sql.ResultSet;
 import java.util.*;
-import java.util.concurrent.*;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 /**
  * DataExtension.
@@ -98,14 +100,14 @@ public class QuestsExtension implements DataExtension {
                 .columnOne("Quest", Icon.called("book").build())
                 .columnTwo("Times completed", Icon.called("check-square").of(Family.REGULAR).build());
 
-        String sql = "SELECT t.col_1_value as quest, SUM(t.col_2_value) as completion_times" +
+        String sql = "SELECT tv.col_1_value as quest, SUM(tv.col_2_value) as completion_times" +
                 " FROM plan_extension_user_table_values tv" +
                 " JOIN plan_extension_tables t on t.id=tv.table_id" +
                 " JOIN plan_extension_plugins p on p.id=t.plugin_id" +
                 " WHERE p.name=?" +
                 " AND t.name=?" +
-                " GROUP BY t.col_1_value" +
-                " ORDER BY quest DESC";
+                " GROUP BY quest" +
+                " ORDER BY quest ASC";
         QueryService.getInstance().query(sql, statement -> {
             try (ResultSet set = statement.executeQuery()) {
                 statement.setString(1, "Quests");
