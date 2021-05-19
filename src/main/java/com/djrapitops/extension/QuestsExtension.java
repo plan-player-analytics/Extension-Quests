@@ -109,9 +109,9 @@ public class QuestsExtension implements DataExtension {
                 " GROUP BY quest" +
                 " ORDER BY quest ASC";
         QueryService.getInstance().query(sql, statement -> {
+            statement.setString(1, "Quests");
+            statement.setString(2, "playerQuestsTable");
             try (ResultSet set = statement.executeQuery()) {
-                statement.setString(1, "Quests");
-                statement.setString(2, "playerQuestsTable");
                 while (set.next()) {
                     table.addRow(set.getString("quest"), set.getInt("completion_times"));
                 }
