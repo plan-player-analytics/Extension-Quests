@@ -35,11 +35,15 @@ import com.djrapitops.plan.query.QueryService;
 import me.blackvein.quests.Quest;
 import me.blackvein.quests.Quester;
 import me.blackvein.quests.Quests;
+import me.blackvein.quests.storage.Storage;
 import org.bukkit.Bukkit;
 
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.sql.ResultSet;
 import java.util.*;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
@@ -74,7 +78,7 @@ public class QuestsExtension implements DataExtension {
                 .columnOne("Quest", Icon.called("book").build())
                 .columnTwo("Times completed", Icon.called("check-square").of(Family.REGULAR).build());
         try {
-            Quester quester = quests.getStorage().loadQuesterData(playerUUID).get(1, TimeUnit.MINUTES);
+            Quester quester = getQuester(playerUUID);
             List<Quest> completedQuests = new ArrayList<>(quester.getCompletedQuests());
             Collections.sort(completedQuests);
             Map<Quest, Integer> amountsCompleted = quester.getAmountsCompleted();
@@ -89,9 +93,29 @@ public class QuestsExtension implements DataExtension {
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
             throw new NotReadyException();
-        } catch (ExecutionException | TimeoutException e) {
+        } catch (ExecutionException | TimeoutException | InvocationTargetException | IllegalAccessException e) {
             throw new NotReadyException();
         }
+    }
+
+    private Quester getQuester(UUID playerUUID) throws InterruptedException, ExecutionException, TimeoutException, InvocationTargetException, IllegalAccessException {
+        Storage storage = quests.getStorage();
+        Method getQuesterMethod;
+        try {
+            getQuesterMethod = storage.getClass().getDeclaredMethod("loadQuesterData", UUID.class);
+        } catch (NoSuchMethodException e) {
+            try {
+                getQuesterMethod = storage.getClass().getDeclaredMethod("loadQuester", UUID.class);
+            } catch (NoSuchMethodException e2) {
+                throw new NotReadyException();
+            }
+        }
+
+        Object future = getQuesterMethod.invoke(storage, playerUUID);
+        if (!(future instanceof Future)) {
+            throw new IllegalStateException("Quests plugin has incompatibly changed, Quests Storage has no loadQuesterData or loadQuester method");
+        }
+        return ((Future<Quester>) future).get(1, TimeUnit.MINUTES);
     }
 
     @TableProvider(tableColor = Color.LIGHT_GREEN)
