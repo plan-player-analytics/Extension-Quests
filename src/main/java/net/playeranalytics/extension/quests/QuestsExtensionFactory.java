@@ -35,7 +35,7 @@ public class QuestsExtensionFactory {
 
     private boolean isAvailable() {
         try {
-            Class.forName("me.blackvein.quests.Quest");
+            Class.forName("me.blackvein.quests.Quests");
             return true;
         } catch (ClassNotFoundException e) {
             return false;

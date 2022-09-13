@@ -6,7 +6,7 @@
 
     <groupId>net.playeranalytics</groupId>
     <artifactId>Extension-Quests</artifactId>
-    <version>4.0.5-R1.1</version>
+    <version>4.5.3-R1.1</version>
     <build>
         <plugins>
             <plugin>
@@ -47,8 +47,8 @@
         <!--        </repository>-->
 
         <repository>
-            <id>jitpack.io</id>
-            <url>https://jitpack.io</url>
+            <id>codemc-repo</id>
+            <url>https://repo.codemc.io/repository/maven-public/</url>
         </repository>
         <repository>
             <id>plan-repo</id>
@@ -66,9 +66,15 @@
 
         <!-- Plugin API Dependency -->
         <dependency>
-            <groupId>com.github.PikaMug</groupId>
-            <artifactId>Quests</artifactId>
-            <version>4.0.5</version>
+            <groupId>me.blackvein.quests</groupId>
+            <artifactId>quests-api</artifactId>
+            <version>4.5.3</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>me.blackvein.quests</groupId>
+            <artifactId>quests-core</artifactId>
+            <version>4.5.3</version>
             <scope>provided</scope>
         </dependency>
 

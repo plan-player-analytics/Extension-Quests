@@ -35,6 +35,7 @@ import com.djrapitops.plan.query.QueryService;
 import me.blackvein.quests.Quest;
 import me.blackvein.quests.Quester;
 import me.blackvein.quests.Quests;
+import me.blackvein.quests.quests.IQuest;
 import me.blackvein.quests.storage.Storage;
 import org.bukkit.Bukkit;
 
@@ -81,11 +82,11 @@ public class QuestsExtension implements DataExtension {
             Quester quester = getQuester(playerUUID);
             List<Quest> completedQuests = new ArrayList<>(quester.getCompletedQuests());
             Collections.sort(completedQuests);
-            Map<Quest, Integer> amountsCompleted = quester.getAmountsCompleted();
+            Map<IQuest, Integer> amountsCompleted = quester.getAmountsCompleted();
 
             for (Quest completedQuest : completedQuests) {
                 String questName = completedQuest.getName();
-                int amountCompleted = amountsCompleted.getOrDefault(completedQuest, 0);
+                int amountCompleted = amountsCompleted.getOrDefault(completedQuest, 1);
                 table.addRow(questName, amountCompleted);
             }
 
