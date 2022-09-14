@@ -26,6 +26,9 @@ import com.djrapitops.plan.extension.CallEvents;
 import com.djrapitops.plan.extension.DataExtension;
 import com.djrapitops.plan.extension.NotReadyException;
 import com.djrapitops.plan.extension.annotation.PluginInfo;
+import com.djrapitops.plan.extension.annotation.StringProvider;
+import com.djrapitops.plan.extension.annotation.Tab;
+import com.djrapitops.plan.extension.annotation.TabInfo;
 import com.djrapitops.plan.extension.annotation.TableProvider;
 import com.djrapitops.plan.extension.icon.Color;
 import com.djrapitops.plan.extension.icon.Family;
@@ -35,18 +38,13 @@ import com.djrapitops.plan.query.QueryService;
 import me.blackvein.quests.Quest;
 import me.blackvein.quests.Quester;
 import me.blackvein.quests.Quests;
+import me.blackvein.quests.player.IQuester;
 import me.blackvein.quests.quests.IQuest;
-import me.blackvein.quests.storage.Storage;
 import org.bukkit.Bukkit;
 
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
 import java.sql.ResultSet;
 import java.util.*;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 
 /**
  * DataExtension.
@@ -54,6 +52,8 @@ import java.util.concurrent.TimeoutException;
  * @author AuroraLS3
  */
 @PluginInfo(name = "Quests", iconName = "book", iconFamily = Family.SOLID, color = Color.LIGHT_GREEN)
+@TabInfo(tab = "History", iconName = "history", iconFamily = Family.SOLID, elementOrder = {})
+@TabInfo(tab = "Statistics", iconName = "info-circle", iconFamily = Family.SOLID, elementOrder = {})
 public class QuestsExtension implements DataExtension {
 
     private Quests quests;
@@ -73,13 +73,85 @@ public class QuestsExtension implements DataExtension {
         };
     }
 
+    @StringProvider(
+            text = "Quest Points",
+            description = "Total amount of Quest Points",
+            priority = 100,
+            iconName = "certificate",
+            iconColor = Color.AMBER
+    )
+    @Tab("Statistics")
+    public String points(UUID playerUUID) {
+        try {
+            return Optional.of(String.valueOf(getQuester(playerUUID).getQuestPoints())).orElse("0");
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new NotReadyException();
+        } catch (ExecutionException e) {
+            throw new NotReadyException();
+        }
+    }
+
+    @TableProvider(tableColor = Color.AMBER)
+    @Tab("Statistics")
+    public Table playerCurrentQuestsTable(UUID playerUUID) {
+        Table.Factory table = Table.builder()
+                .columnOne("Quest", Icon.called("book").build())
+                .columnTwo("Current stage", Icon.called("list").build());
+        try {
+            Quester quester = (Quester) getQuester(playerUUID);
+            Map<Quest, Integer> currentQuests = new TreeMap<>(quester.getCurrentQuests());
+
+            for (Map.Entry<Quest, Integer> entry : currentQuests.entrySet()) {
+                table.addRow(entry.getKey().getName(), entry.getValue() + 1);
+            }
+
+            return table.build();
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new NotReadyException();
+        } catch (ExecutionException e) {
+            throw new NotReadyException();
+        }
+    }
+
+    @StringProvider(
+            text = "Most frequent",
+            description = "Top repeated quest",
+            priority = 100,
+            iconName = "heart",
+            iconColor = Color.YELLOW
+    )
+    @Tab("History")
+    public String mostFrequent(UUID playerUUID) {
+        try {
+            Quester quester = (Quester) getQuester(playerUUID);
+            String questName = "None";
+            int max = 0;
+            for (Map.Entry<IQuest, Integer> entry : quester.getAmountsCompleted().entrySet()) {
+                if (entry.getValue() > max) {
+                    questName = entry.getKey().getName();
+                    max = entry.getValue();
+                }
+            }
+
+            return questName;
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new NotReadyException();
+        } catch (ExecutionException e) {
+            throw new NotReadyException();
+        }
+    }
+
     @TableProvider(tableColor = Color.LIGHT_GREEN)
+    @Tab("History")
     public Table playerQuestsTable(UUID playerUUID) {
         Table.Factory table = Table.builder()
                 .columnOne("Quest", Icon.called("book").build())
                 .columnTwo("Times completed", Icon.called("check-square").of(Family.REGULAR).build());
         try {
-            Quester quester = getQuester(playerUUID);
+            Quester quester = (Quester) getQuester(playerUUID);
             List<Quest> completedQuests = new ArrayList<>(quester.getCompletedQuests());
             Collections.sort(completedQuests);
             Map<IQuest, Integer> amountsCompleted = quester.getAmountsCompleted();
@@ -94,29 +166,13 @@ public class QuestsExtension implements DataExtension {
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
             throw new NotReadyException();
-        } catch (ExecutionException | TimeoutException | InvocationTargetException | IllegalAccessException e) {
+        } catch (ExecutionException e) {
             throw new NotReadyException();
         }
     }
 
-    private Quester getQuester(UUID playerUUID) throws InterruptedException, ExecutionException, TimeoutException, InvocationTargetException, IllegalAccessException {
-        Storage storage = quests.getStorage();
-        Method getQuesterMethod;
-        try {
-            getQuesterMethod = storage.getClass().getDeclaredMethod("loadQuesterData", UUID.class);
-        } catch (NoSuchMethodException e) {
-            try {
-                getQuesterMethod = storage.getClass().getDeclaredMethod("loadQuester", UUID.class);
-            } catch (NoSuchMethodException e2) {
-                throw new NotReadyException();
-            }
-        }
-
-        Object future = getQuesterMethod.invoke(storage, playerUUID);
-        if (!(future instanceof Future)) {
-            throw new IllegalStateException("Quests plugin has incompatibly changed, Quests Storage has no loadQuesterData or loadQuester method");
-        }
-        return ((Future<Quester>) future).get(1, TimeUnit.MINUTES);
+    private IQuester getQuester(UUID playerUUID) throws ExecutionException, InterruptedException {
+        return Optional.ofNullable(quests.getStorage().loadQuester(playerUUID).get()).orElseThrow(NotReadyException::new);
     }
 
     @TableProvider(tableColor = Color.LIGHT_GREEN)
