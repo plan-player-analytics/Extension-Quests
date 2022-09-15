@@ -85,7 +85,7 @@ public class QuestsExtension implements DataExtension {
     )
     @Tab("Statistics")
     public long points(UUID playerUUID) {
-        return Optional.of((long)getQuester(playerUUID).getQuestPoints()).orElse(0L);
+        return getQuester(playerUUID).getQuestPoints();
     }
 
     @TableProvider(tableColor = Color.AMBER)
