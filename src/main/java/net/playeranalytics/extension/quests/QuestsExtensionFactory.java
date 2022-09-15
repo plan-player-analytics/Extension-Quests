@@ -22,9 +22,11 @@
 */
 package net.playeranalytics.extension.quests;
 
+import com.djrapitops.plan.extension.Caller;
 import com.djrapitops.plan.extension.DataExtension;
 
 import java.util.Optional;
+import java.util.function.Function;
 
 /**
  * Factory for DataExtension.
@@ -33,9 +35,11 @@ import java.util.Optional;
  */
 public class QuestsExtensionFactory {
 
-    private boolean isAvailable() {
+    private Function<Caller, QuestsListener> listenerConstructor;
+
+    private boolean isAvailable(String className) {
         try {
-            Class.forName("me.blackvein.quests.Quest");
+            Class.forName(className);
             return true;
         } catch (ClassNotFoundException e) {
             return false;
@@ -43,9 +47,28 @@ public class QuestsExtensionFactory {
     }
 
     public Optional<DataExtension> createExtension() {
-        if (isAvailable()) {
-            return Optional.of(new QuestsExtension());
+        QuestsExtension extension = createNewExtension();
+        return Optional.ofNullable(extension);
+    }
+
+    public void registerListener(Caller caller) {
+        listenerConstructor.apply(caller).register();
+        listenerConstructor = null;
+    }
+
+    private QuestsExtension createNewExtension() {
+        Function<Caller, QuestsListener> constructListener = getListenerConstructor();
+        if (constructListener == null) return null;
+
+        this.listenerConstructor = constructListener;
+        return new QuestsExtension();
+    }
+
+    private Function<Caller, QuestsListener> getListenerConstructor() {
+        if (isAvailable("me.blackvein.quests.Quests")) {
+            return QuestsBukkitListener::new;
+        } else {
+            return null;
         }
-        return Optional.empty();
     }
 }
