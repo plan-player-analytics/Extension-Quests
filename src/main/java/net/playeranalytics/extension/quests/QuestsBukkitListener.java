@@ -25,8 +25,8 @@ package net.playeranalytics.extension.quests;
 import com.djrapitops.plan.extension.Caller;
 import com.djrapitops.plan.settings.ListenerService;
 import com.djrapitops.plan.settings.SchedulerService;
-import me.blackvein.quests.Quester;
-import me.blackvein.quests.events.quester.QuesterPostChangeStageEvent;
+import me.pikamug.quests.events.quester.BukkitQuesterPostChangeStageEvent;
+import me.pikamug.quests.player.Quester;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
@@ -43,7 +43,7 @@ public class QuestsBukkitListener extends QuestsListener implements Listener {
     }
 
     @EventHandler(priority = EventPriority.MONITOR)
-    public void onChangeStage(QuesterPostChangeStageEvent event) {
+    public void onChangeStage(BukkitQuesterPostChangeStageEvent event) {
         Quester quester = event.getQuester();
         SchedulerService.getInstance().runAsync(() -> caller.updatePlayerData(quester.getUUID(), quester.getPlayer().getName()));
     }

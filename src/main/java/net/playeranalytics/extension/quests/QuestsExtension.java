@@ -25,29 +25,19 @@ package net.playeranalytics.extension.quests;
 import com.djrapitops.plan.extension.CallEvents;
 import com.djrapitops.plan.extension.DataExtension;
 import com.djrapitops.plan.extension.NotReadyException;
-import com.djrapitops.plan.extension.annotation.NumberProvider;
-import com.djrapitops.plan.extension.annotation.PluginInfo;
-import com.djrapitops.plan.extension.annotation.StringProvider;
-import com.djrapitops.plan.extension.annotation.Tab;
-import com.djrapitops.plan.extension.annotation.TabInfo;
-import com.djrapitops.plan.extension.annotation.TableProvider;
+import com.djrapitops.plan.extension.annotation.*;
 import com.djrapitops.plan.extension.icon.Color;
 import com.djrapitops.plan.extension.icon.Family;
 import com.djrapitops.plan.extension.icon.Icon;
 import com.djrapitops.plan.extension.table.Table;
 import com.djrapitops.plan.query.QueryService;
-import me.blackvein.quests.Quest;
-import me.blackvein.quests.Quester;
-import me.blackvein.quests.Quests;
-import me.blackvein.quests.player.IQuester;
-import me.blackvein.quests.quests.IQuest;
+import me.pikamug.quests.Quests;
+import me.pikamug.quests.player.Quester;
+import me.pikamug.quests.quests.Quest;
 import org.bukkit.Bukkit;
 
 import java.sql.ResultSet;
 import java.util.*;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 
 /**
  * DataExtension.
@@ -95,7 +85,7 @@ public class QuestsExtension implements DataExtension {
                 .columnOne("Quest", Icon.called("book").build())
                 .columnTwo("Current stage", Icon.called("list").build());
 
-        Quester quester = (Quester) getQuester(playerUUID);
+        Quester quester = getQuester(playerUUID);
         Map<Quest, Integer> currentQuests = new TreeMap<>(quester.getCurrentQuests());
 
         for (Map.Entry<Quest, Integer> entry : currentQuests.entrySet()) {
@@ -114,10 +104,10 @@ public class QuestsExtension implements DataExtension {
     )
     @Tab("History")
     public String mostFrequent(UUID playerUUID) {
-        Quester quester = (Quester) getQuester(playerUUID);
+        Quester quester = getQuester(playerUUID);
         String questName = "None";
         int max = 0;
-        for (Map.Entry<IQuest, Integer> entry : quester.getAmountsCompleted().entrySet()) {
+        for (Map.Entry<Quest, Integer> entry : quester.getAmountsCompleted().entrySet()) {
             if (entry.getValue() > max) {
                 questName = entry.getKey().getName();
                 max = entry.getValue();
@@ -134,10 +124,10 @@ public class QuestsExtension implements DataExtension {
                 .columnOne("Quest", Icon.called("book").build())
                 .columnTwo("Times completed", Icon.called("check-square").of(Family.REGULAR).build());
 
-        Quester quester = (Quester) getQuester(playerUUID);
+        Quester quester = getQuester(playerUUID);
         List<Quest> completedQuests = new ArrayList<>(quester.getCompletedQuests());
         Collections.sort(completedQuests);
-        Map<IQuest, Integer> amountsCompleted = quester.getAmountsCompleted();
+        Map<Quest, Integer> amountsCompleted = quester.getAmountsCompleted();
 
         for (Quest completedQuest : completedQuests) {
             String questName = completedQuest.getName();
@@ -148,13 +138,10 @@ public class QuestsExtension implements DataExtension {
         return table.build();
     }
 
-    private IQuester getQuester(UUID playerUUID) {
+    private Quester getQuester(UUID playerUUID) {
         try {
-            return Optional.ofNullable(quests.getStorage().loadQuester(playerUUID).get(1, TimeUnit.MINUTES)).orElseThrow(NotReadyException::new);
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-            throw new NotReadyException();
-        } catch (ExecutionException | TimeoutException | IncompatibleClassChangeError e) {
+            return Optional.ofNullable(quests.getQuester(playerUUID)).orElseThrow(NotReadyException::new);
+        } catch (IncompatibleClassChangeError e) {
             throw new NotReadyException();
         }
 

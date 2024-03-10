@@ -65,7 +65,7 @@ public class QuestsExtensionFactory {
     }
 
     private Function<Caller, QuestsListener> getListenerConstructor() {
-        if (isAvailable("me.blackvein.quests.Quests")) {
+        if (isAvailable("me.pikamug.quests.Quests")) {
             return QuestsBukkitListener::new;
         } else {
             return null;

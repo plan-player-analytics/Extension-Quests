@@ -6,7 +6,7 @@
 
     <groupId>net.playeranalytics</groupId>
     <artifactId>Extension-Quests</artifactId>
-    <version>4.5.3-R1.1</version>
+    <version>5.0.1-R1.0</version>
     <build>
         <plugins>
             <plugin>
@@ -66,15 +66,15 @@
 
         <!-- Plugin API Dependency -->
         <dependency>
-            <groupId>me.blackvein.quests</groupId>
+            <groupId>me.pikamug.quests</groupId>
             <artifactId>quests-api</artifactId>
-            <version>4.5.3</version>
+            <version>5.0.1</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
-            <groupId>me.blackvein.quests</groupId>
+            <groupId>me.pikamug.quests</groupId>
             <artifactId>quests-core</artifactId>
-            <version>4.5.3</version>
+            <version>5.0.1</version>
             <scope>provided</scope>
         </dependency>
 
